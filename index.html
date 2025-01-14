@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Advanced Meselson-Stahl Simulator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      text-align: center;
+    }
+    .dna-tube {
+      width: 200px;
+      height: 300px;
+      margin: 20px auto;
+      border: 2px solid #000;
+      border-radius: 10px;
+      position: relative;
+      background: #f0f0f0;
+    }
+    .band {
+      width: 80%;
+      height: 20px;
+      margin: 5px auto;
+      position: absolute;
+      left: 10%;
+      border-radius: 5px;
+    }
+    .heavy { background-color: #000080; }
+    .light { background-color: #ADD8E6; }
+    .hybrid { background-color: #4682B4; }
+    .control-panel { margin: 20px; }
+    button, select { margin: 5px; padding: 10px 20px; font-size: 16px; }
+    table { margin: 20px auto; border-collapse: collapse; width: 80%; }
+    table, th, td { border: 1px solid black; }
+    th, td { padding: 10px; text-align: center; }
+    #data-output { margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+<h1>Interactive Meselson-Stahl Experiment Simulator</h1>
+<p>Simulate DNA replication using heavy (¹⁵N) and light (¹⁴N) nitrogen isotopes. Test different replication models and compare results!</p>
+
+<div class="dna-tube" id="tube"></div>
+
+<div class="control-panel">
+  <button onclick="startExperiment()">Start Experiment</button>
+  <button onclick="replicateDNA()">Replicate DNA</button>
+  <button onclick="resetExperiment()">Reset</button>
+  <select id="model-select">
+    <option value="semiconservative">Semiconservative</option>
+    <option value="conservative">Conservative</option>
+    <option value="dispersive">Dispersive</option>
+  </select>
+</div>
+
+<p id="description">Select a model and click "Start Experiment" to begin.</p>
+
+<div id="data-output">
+  <h2>DNA Proportions</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Generation</th>
+        <th>Heavy (%)</th>
+        <th>Hybrid (%)</th>
+        <th>Light (%)</th>
+      </tr>
+    </thead>
+    <tbody id="data-table"></tbody>
+  </table>
+</div>
+
+<script>
+  let generations = 0;
+  let model = "semiconservative";
+  const tube = document.getElementById('tube');
+  const description = document.getElementById('description');
+  const dataTable = document.getElementById('data-table');
+  const modelSelect = document.getElementById('model-select');
+
+  modelSelect.addEventListener('change', () => {
+    model = modelSelect.value;
+    resetExperiment();
+  });
+
+  function clearTube() {
+    tube.innerHTML = '';
+  }
+
+  function clearTable() {
+    dataTable.innerHTML = '';
+  }
+
+  function addBand(type, position) {
+    const band = document.createElement('div');
+    band.className = `band ${type}`;
+    band.style.bottom = `${position}%`;
+    tube.appendChild(band);
+  }
+
+  function addRow(gen, heavy, hybrid, light) {
+    const row = document.createElement('tr');
+    row.innerHTML = `<td>${gen}</td><td>${heavy}</td><td>${hybrid}</td><td>${light}</td>`;
+    dataTable.appendChild(row);
+  }
+
+  function startExperiment() {
+    clearTube();
+    clearTable();
+    generations = 0;
+    if (model === "semiconservative") {
+      addBand('heavy', 20);
+      addRow(0, 100, 0, 0);
+      description.textContent = 'Heavy DNA (¹⁵N) starts at the bottom.';
+    } else if (model === "conservative") {
+      addBand('heavy', 20);
+      addBand('light', 70);
+      addRow(0, 50, 0, 50);
+      description.textContent = 'Both heavy and light DNA are present initially.';
+    } else {
+      addBand('heavy', 20);
+      addRow(0, 100, 0, 0);
+      description.textContent = 'Dispersive replication begins with fully heavy DNA.';
+    }
+  }
+
+  function replicateDNA() {
+    if (model === "semiconservative") {
+      if (generations === 0) {
+        clearTube();
+        addBand('hybrid', 50);
+        addRow(1, 0, 100, 0);
+        description.textContent = 'After 1 replication: All DNA is hybrid.';
+      } else if (generations === 1) {
+        clearTube();
+        addBand('light', 70);
+        addBand('hybrid', 50);
+        addRow(2, 0, 50, 50);
+        description.textContent = 'After 2 replications: Light and hybrid DNA are present.';
+      } else {
+        clearTube();
+        addBand('light', 80);
+        addBand('light', 70);
+        addBand('hybrid', 50);
+        addRow(generations + 1, 0, 25, 75);
+        description.textContent = 'After 3+ replications: Light DNA dominates, hybrid DNA remains.';
+      }
+    } else if (model === "conservative") {
+      if (generations === 0) {
+        clearTube();
+        addBand('heavy', 20);
+        addBand('light', 70);
+        addRow(1, 50, 0, 50);
+        description.textContent = 'Conservative replication keeps heavy DNA intact, producing new light DNA.';
+      } else {
+        clearTube();
+        addBand('heavy', 20);
+        addBand('light', 80);
+        addRow(generations + 1, 25, 0, 75);
+        description.textContent = 'Light DNA continues to increase, heavy DNA persists.';
+      }
+    } else if (model === "dispersive") {
+      clearTube();
+      addBand('hybrid', 50);
+      addRow(generations + 1, 0, 100, 0);
+      description.textContent = 'Dispersive replication creates mixed DNA with uniform proportions.';
+    }
+    generations++;
+  }
+
+  function resetExperiment() {
+    clearTube();
+    clearTable();
+    generations = 0;
+    description.textContent = 'Select a model and click "Start Experiment" to begin.';
+  }
+</script>
+
+</body>
+</html>
